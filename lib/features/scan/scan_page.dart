@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../device/device_page.dart';
 import 'scan_controller.dart';
 
 /// 扫描页（第 2 课）：空态 / 错误态 / 过滤开关 / 结果列表。
@@ -18,6 +19,20 @@ class _ScanPageState extends State<ScanPage> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// 进详情页前先停扫描：安卓上边扫边连会显著提高 status 133 概率（第一条军规）
+  Future<void> _openDevice(BuildContext context, ScanResult result) async {
+    await _controller.stopScan();
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DevicePage(
+          device: result.device,
+          name: ScanController.displayName(result),
+        ),
+      ),
+    );
   }
 
   @override
@@ -55,9 +70,14 @@ class _ScanPageState extends State<ScanPage> {
                             itemCount: _controller.visibleResults.length,
                             separatorBuilder: (_, _) =>
                                 const Divider(height: 1, indent: 16),
-                            itemBuilder: (context, index) => _ResultTile(
-                              result: _controller.visibleResults[index],
-                            ),
+                            itemBuilder: (context, index) {
+                              final result =
+                                  _controller.visibleResults[index];
+                              return _ResultTile(
+                                result: result,
+                                onTap: () => _openDevice(context, result),
+                              );
+                            },
                           ),
               ),
             ],
@@ -107,15 +127,18 @@ class _FilterBar extends StatelessWidget {
 }
 
 class _ResultTile extends StatelessWidget {
-  const _ResultTile({required this.result});
+  const _ResultTile({required this.result, required this.onTap});
 
   final ScanResult result;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final name = ScanController.displayName(result);
     final adv = result.advertisementData;
     return ListTile(
+      // 不可连接的设备（纯广播的信标）没有详情页可看
+      onTap: adv.connectable ? onTap : null,
       leading: _RssiIndicator(rssi: result.rssi),
       title: Text(name.isEmpty ? '（无名设备）' : name),
       subtitle: Column(

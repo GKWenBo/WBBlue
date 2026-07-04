@@ -82,6 +82,8 @@ class ScanController extends ChangeNotifier {
         // 默认同一设备只上报一次（广播变化才再报），
         // 开 continuousUpdates 才能看到 RSSI 实时跳动
         continuousUpdates: true,
+        // 超过 4 秒没再收到广播就从快照移除，治理「幽灵设备」（第 3 课兑现）
+        removeIfGone: const Duration(seconds: 4),
       );
     } catch (e) {
       // 权限被拒 / 蓝牙未开 / 定位服务未开都会走到这里，是业务分支不是兜底
