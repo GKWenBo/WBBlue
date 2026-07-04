@@ -11,8 +11,8 @@
 |:---:|---|---|---|
 | ✅ | 第 0 课 | 环境与项目初始化 | 双端真机跑起空项目；两台手机装好 nRF Connect / LightBlue |
 | ✅ | 第 1 课 | BLE 理论地基（GAP/GATT/广播/MTU） | 能口述一次 BLE 连接的完整生命周期 |
-| 🔄 | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
-| ⬜ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
+| ✅ | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
+| 🔄 | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
 | ⬜ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
 | ⬜ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
 | ⬜ | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
@@ -43,3 +43,10 @@
 - [x] 验收：三道验收题以讲解答案形式过关（生命周期口述稿、0x180D/Notify 观察、Write+Notify vs 轮询 Read）
 
 备注：验收答案整理在会话中，生命周期口述稿可直接作为面试答案背诵。
+
+### 第 2 课 —— ✅ 已验收（2026-07-04）
+- [x] 代码：ScanController（adapterState/scanResults/isScanning 三流订阅）+ 扫描列表 UI + 两条纯逻辑单元测试
+- [x] 实操：安卓端扫到 LightBlue 心率外设，服务过滤生效；iPhone 端扫到 nRF Connect 自定义广播
+- [x] 验收题：remoteId 双端差异与绑定方案（MAC vs UUID、厂商数据兜底、RPA 补充）、扫描节流/timeout 必要性、removeIfGone 幽灵设备治理
+
+遗留伏笔：removeIfGone 本课讲了原理未开启，第 3 课做连接页时一并加上体验对比。
