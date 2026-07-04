@@ -10,8 +10,8 @@
 | 状态 | 课时 | 主题 | 验收标准 |
 |:---:|---|---|---|
 | ✅ | 第 0 课 | 环境与项目初始化 | 双端真机跑起空项目；两台手机装好 nRF Connect / LightBlue |
-| 🔄 | 第 1 课 | BLE 理论地基（GAP/GATT/广播/MTU） | 能口述一次 BLE 连接的完整生命周期 |
-| ⬜ | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
+| ✅ | 第 1 课 | BLE 理论地基（GAP/GATT/广播/MTU） | 能口述一次 BLE 连接的完整生命周期 |
+| 🔄 | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
 | ⬜ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
 | ⬜ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
 | ⬜ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
@@ -37,7 +37,9 @@
 备注：本机 Flutter 下载引擎产物需带国内镜像环境变量（`FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`），否则首次 iOS 构建会因慢速下载假死。
 思考题（Android 12 前扫描为何要定位权限 / neverForLocation 的代价）随第 1 课理论一并讲解确认。
 
-### 第 1 课 —— 🔄 进行中（2026-07-04 开讲）
-- [ ] 理论：GAP/GATT、广播包结构、连接生命周期、MTU（讲义 lessons/lesson-01.md）
-- [ ] 实操：LightBlue 建虚拟外设，nRF Connect 扫描→连接→读 GATT 树（纯手机，不写代码）
-- [ ] 验收：口述一次 BLE 连接的完整生命周期 + 回答本课与第 0 课思考题
+### 第 1 课 —— ✅ 已验收（2026-07-04）
+- [x] 理论：GAP/GATT、广播包结构、连接生命周期、MTU（讲义 lessons/lesson-01.md）
+- [x] 实操：LightBlue 建虚拟外设，nRF Connect 扫描→连接→订阅 0x2A37（过程中实地踩了 iOS 后台广播降级坑：LightBlue 退后台/锁屏后安卓扫不到）
+- [x] 验收：三道验收题以讲解答案形式过关（生命周期口述稿、0x180D/Notify 观察、Write+Notify vs 轮询 Read）
+
+备注：验收答案整理在会话中，生命周期口述稿可直接作为面试答案背诵。
