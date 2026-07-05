@@ -111,6 +111,18 @@ class _CharacteristicTile extends StatelessWidget {
                   icon: const Icon(Icons.upload, size: 16),
                   label: const Text('写入'),
                 ),
+              // 订阅状态直接读 isNotifying（反查 CCCD），不自己存 bool
+              if (props.notify || props.indicate)
+                TextButton.icon(
+                  onPressed: () => controller.toggleNotify(characteristic),
+                  icon: Icon(
+                    characteristic.isNotifying
+                        ? Icons.notifications_active
+                        : Icons.notifications_none,
+                    size: 16,
+                  ),
+                  label: Text(characteristic.isNotifying ? '订阅中' : '订阅'),
+                ),
             ],
           ),
         ],

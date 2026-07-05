@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../../core/gatt_names.dart';
+import '../../core/heart_rate.dart';
+
 /// 设备详情页的连接状态机（第 3 课）。
 ///
 /// 两层状态刻意分开：
@@ -20,6 +23,9 @@ class DeviceController extends ChangeNotifier {
         disconnectReason = device.disconnectReason;
         // 句柄表属于「这一次连接」：断线即作废，不缓存不落盘
         services = const [];
+        // 订阅同理（CCCD 随连接复位），流已由 cancelWhenDisconnected 取消
+        _valueSubs.clear();
+        currentBpm = null;
       } else {
         disconnectReason = null;
       }
@@ -41,6 +47,11 @@ class DeviceController extends ChangeNotifier {
   /// 本次连接发现的服务表（第 4 课）
   List<BluetoothService> services = const [];
   bool discovering = false;
+
+  /// 心率样本环形缓存（第 5 课）：上限约 2 分钟，防止长订阅内存无限涨
+  static const int maxHrSamples = 120;
+  final List<int> hrSamples = [];
+  int? currentBpm;
 
   late final StreamSubscription<BluetoothConnectionState> _stateSub;
 
@@ -98,6 +109,43 @@ class DeviceController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// 订阅/取消订阅通知（第 5 课）。
+  /// setNotifyValue 在协议层做两件事：本地向系统蓝牙栈注册回调 +
+  /// 远端向 CCCD（0x2902）写 01 00 / 00 00。
+  /// 订阅状态不自己存 bool，UI 直接读 c.isNotifying（反查 CCCD，单一事实来源）。
+  Future<void> toggleNotify(BluetoothCharacteristic c) async {
+    try {
+      final enable = !c.isNotifying;
+      if (enable && !_valueSubs.containsKey(c.uuid)) {
+        // 先挂监听再开闸，避免开闸瞬间的首包漏掉。
+        // onValueReceived 只含读回与通知（不混写回显），上报处理统一接它。
+        final sub = c.onValueReceived.listen((value) {
+          if (shortUuid(c.uuid) == '2A37') {
+            final bpm = parseHeartRate(value);
+            if (bpm != null) {
+              currentBpm = bpm;
+              hrSamples.add(bpm);
+              if (hrSamples.length > maxHrSamples) hrSamples.removeAt(0);
+            }
+          }
+          notifyListeners();
+        });
+        // 断线自动取消订阅，防泄漏（订阅生命周期 ≤ 连接生命周期）
+        device.cancelWhenDisconnected(sub);
+        _valueSubs[c.uuid] = sub;
+      }
+      await c.setNotifyValue(enable);
+      if (!enable) {
+        await _valueSubs.remove(c.uuid)?.cancel();
+      }
+    } catch (e) {
+      lastError = '$e';
+    }
+    notifyListeners();
+  }
+
+  final Map<Guid, StreamSubscription<List<int>>> _valueSubs = {};
 
   /// 读特征值。结果同时进 characteristic.lastValue，UI 直接读它展示。
   Future<void> readCharacteristic(BluetoothCharacteristic c) async {

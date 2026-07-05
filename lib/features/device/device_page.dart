@@ -3,6 +3,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'device_controller.dart';
 import 'gatt_browser.dart';
+import 'heart_rate_chart.dart';
 
 /// 设备详情页骨架（第 3 课）：连接状态卡片 + 动作按钮。
 /// GATT 服务浏览与读写在第 4 课长到这页下方。
@@ -40,6 +41,14 @@ class _DevicePageState extends State<DevicePage> {
               _StateCard(controller: _controller, device: widget.device),
               const SizedBox(height: 16),
               _ActionButtons(controller: _controller),
+              if (_controller.hrSamples.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                HeartRateChart(
+                  samples: _controller.hrSamples,
+                  currentBpm: _controller.currentBpm,
+                  capacity: DeviceController.maxHrSamples,
+                ),
+              ],
               const SizedBox(height: 24),
               GattBrowser(controller: _controller),
             ],
