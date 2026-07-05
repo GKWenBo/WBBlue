@@ -14,8 +14,8 @@
 | ✅ | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
 | ✅ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
 | ✅ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
-| 🔄 | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
-| ⬜ | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
+| ✅ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
+| 🔄 | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
 | ⬜ | 第 7 课 | 稳定性工程（自动重连状态机 / 异常场景） | 外设消失再出现，App 自动恢复连接 |
 | ⬜ | 第 8 课 | 架构分层与可测试性（接口抽象 + Mock 双实现） | Mock 下全流程可离线演示 |
 | ⬜ | 第 9 课 | 双端平台差异与后台（iOS 状态恢复 / Android 前台服务） | 双端后台配置完成，能讲清差异 |
@@ -65,3 +65,10 @@
 - [x] 验收题：句柄不跨连接复用与 GATT 缓存坑（refresh()/Service Changed）、OTA 用 WNR + 应用层流控（链路层有 CRC 重传，丢在对端缓冲溢出）、GATT 只定容器不定语义
 
 工程观念沉淀：UI 显示 ≠ 协议状态，调蓝牙以读回验证 + 抓日志为准。
+
+### 第 5 课 —— ✅ 已验收（2026-07-05）
+- [x] 代码：toggleNotify（先挂监听后开闸、cancelWhenDisconnected 托管、断线清订阅表）、core/heart_rate.dart（flags 位域解析 + RR 间期，7 条单测）、HeartRateChart（CustomPaint 自绘、120 样本环形缓存）
+- [x] 实操：双向订阅（nRF Connect 心率服务 ↔ LightBlue 虚拟外设），曲线实时滚动；断连重连验证 CCCD 复位、需重新订阅
+- [x] 验收题：setNotifyValue 两步（本地注册+写 CCCD 01 00）与安卓忘写 CCCD 经典 bug、Notify/Indicate 与两种写的四象限对称、0x2A37 帧逐字节解析（flags/BPM/RR 小端）
+
+四象限选型表成型：Write Request（可靠指令）/ Write Command（高速下发）/ Indicate（可靠上报）/ Notify（高速上报）。重连必须重订阅——第 7 课状态机的必做项。
