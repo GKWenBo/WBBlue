@@ -12,8 +12,8 @@
 | ✅ | 第 0 课 | 环境与项目初始化 | 双端真机跑起空项目；两台手机装好 nRF Connect / LightBlue |
 | ✅ | 第 1 课 | BLE 理论地基（GAP/GATT/广播/MTU） | 能口述一次 BLE 连接的完整生命周期 |
 | ✅ | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
-| 🔄 | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
-| ⬜ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
+| ✅ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
+| 🔄 | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
 | ⬜ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
 | ⬜ | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
 | ⬜ | 第 7 课 | 稳定性工程（自动重连状态机 / 异常场景） | 外设消失再出现，App 自动恢复连接 |
@@ -50,3 +50,11 @@
 - [x] 验收题：remoteId 双端差异与绑定方案（MAC vs UUID、厂商数据兜底、RPA 补充）、扫描节流/timeout 必要性、removeIfGone 幽灵设备治理
 
 遗留伏笔：removeIfGone 本课讲了原理未开启，第 3 课做连接页时一并加上体验对比。
+
+### 第 3 课 —— ✅ 已验收（2026-07-05）
+- [x] 代码：DeviceController（busy/链路状态双层分离、disconnectReason）、DevicePage 骨架、扫描页 removeIfGone + 点击跳转（连接前 stopScan）
+- [x] 实操：建连/断连、读链路 RSSI、被动断线实验（LightBlue 关外设→App 感知+原因码）、10s 超时实验、幽灵设备 4s 消失验证
+- [x] 验收题：connecting 为何自己维护（UI 状态≠链路状态）、连接的五种死法与流感知、status 133 与 stopScan 军规
+- [x] 附加收获：FBP 2.x License 双轨授权（nonprofit/commercial）选型课
+
+遗留伏笔：「离开页面即断开」策略第 7 课推翻；重连决策 = f(disconnectReason) 第 7 课兑现；MTU 默认 512 请求第 6 课回看。
