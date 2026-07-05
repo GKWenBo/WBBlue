@@ -13,8 +13,8 @@
 | ✅ | 第 1 课 | BLE 理论地基（GAP/GATT/广播/MTU） | 能口述一次 BLE 连接的完整生命周期 |
 | ✅ | 第 2 课 | 扫描实战（运行时权限 / startScan / RSSI / 广播解析） | App 能扫到并列出另一台手机模拟的外设 |
 | ✅ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
-| 🔄 | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
-| ⬜ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
+| ✅ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
+| 🔄 | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
 | ⬜ | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
 | ⬜ | 第 7 课 | 稳定性工程（自动重连状态机 / 异常场景） | 外设消失再出现，App 自动恢复连接 |
 | ⬜ | 第 8 课 | 架构分层与可测试性（接口抽象 + Mock 双实现） | Mock 下全流程可离线演示 |
@@ -58,3 +58,10 @@
 - [x] 附加收获：FBP 2.x License 双轨授权（nonprofit/commercial）选型课
 
 遗留伏笔：「离开页面即断开」策略第 7 课推翻；重连决策 = f(disconnectReason) 第 7 课兑现；MTU 默认 512 请求第 6 课回看。
+
+### 第 4 课 —— ✅ 已验收（2026-07-05）
+- [x] 代码：连接后自动 discoverServices（断线清空句柄表）、GattBrowser 服务浏览器（属性徽标/HEX+文本双显示/写入对话框含写类型开关）、core/hex.dart 纯函数 + 9 条单测、UUID 短名收敛到 core/gatt_names.dart
+- [x] 实操：nRF Connect 自建 GATT server（Read+Write 特征），App 读初始值、写入并读回验证；排查「nRF Connect 配置页不刷新写入值」（配置页显示初始值，运行时状态看对端连接的 SERVER 子页/日志/读回验证）
+- [x] 验收题：句柄不跨连接复用与 GATT 缓存坑（refresh()/Service Changed）、OTA 用 WNR + 应用层流控（链路层有 CRC 重传，丢在对端缓冲溢出）、GATT 只定容器不定语义
+
+工程观念沉淀：UI 显示 ≠ 协议状态，调蓝牙以读回验证 + 抓日志为准。
