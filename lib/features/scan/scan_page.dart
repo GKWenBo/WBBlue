@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../../core/gatt_names.dart';
 import '../device/device_page.dart';
 import 'scan_controller.dart';
 
@@ -147,7 +148,7 @@ class _ResultTile extends StatelessWidget {
           // 安卓显示真 MAC；iOS 是系统生成的 UUID，换台手机就不同
           Text(result.device.remoteId.str),
           if (adv.serviceUuids.isNotEmpty)
-            Text('服务: ${adv.serviceUuids.map(_shortUuid).join(', ')}'),
+            Text('服务: ${adv.serviceUuids.map(shortUuid).join(', ')}'),
           if (adv.manufacturerData.isNotEmpty)
             Text(_manufacturerSummary(adv.manufacturerData),
                 maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -159,14 +160,6 @@ class _ResultTile extends StatelessWidget {
       isThreeLine:
           adv.serviceUuids.isNotEmpty || adv.manufacturerData.isNotEmpty,
     );
-  }
-
-  /// 标准 16-bit UUID 只显示短形式（0000180d-... → 180D）
-  static String _shortUuid(Guid g) {
-    final s = g.str;
-    return s.length == 36 && s.startsWith('0000') && s.contains('-0000-1000-')
-        ? s.substring(4, 8).toUpperCase()
-        : s;
   }
 
   static String _manufacturerSummary(Map<int, List<int>> data) {

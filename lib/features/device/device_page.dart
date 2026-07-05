@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'device_controller.dart';
+import 'gatt_browser.dart';
 
 /// 设备详情页骨架（第 3 课）：连接状态卡片 + 动作按钮。
 /// GATT 服务浏览与读写在第 4 课长到这页下方。
@@ -40,17 +41,7 @@ class _DevicePageState extends State<DevicePage> {
               const SizedBox(height: 16),
               _ActionButtons(controller: _controller),
               const SizedBox(height: 24),
-              // 第 4 课占位：GATT 服务列表
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.account_tree_outlined),
-                  title: const Text('GATT 服务'),
-                  subtitle: Text(
-                    _controller.isConnected ? '第 4 课解锁服务发现与读写' : '连接后可用',
-                  ),
-                  enabled: false,
-                ),
-              ),
+              GattBrowser(controller: _controller),
             ],
           ),
         );

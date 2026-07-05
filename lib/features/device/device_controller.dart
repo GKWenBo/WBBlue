@@ -16,9 +16,13 @@ class DeviceController extends ChangeNotifier {
     // 因此订阅发生在构造时，而不是 connect 之后。
     _stateSub = device.connectionState.listen((state) {
       connectionState = state;
-      disconnectReason = state == BluetoothConnectionState.disconnected
-          ? device.disconnectReason
-          : null;
+      if (state == BluetoothConnectionState.disconnected) {
+        disconnectReason = device.disconnectReason;
+        // 句柄表属于「这一次连接」：断线即作废，不缓存不落盘
+        services = const [];
+      } else {
+        disconnectReason = null;
+      }
       notifyListeners();
     });
   }
@@ -33,6 +37,10 @@ class DeviceController extends ChangeNotifier {
 
   /// 连接态下 readRssi 的结果（链路 RSSI，与扫描时的广播 RSSI 是两条通道）
   int? linkRssi;
+
+  /// 本次连接发现的服务表（第 4 课）
+  List<BluetoothService> services = const [];
+  bool discovering = false;
 
   late final StreamSubscription<BluetoothConnectionState> _stateSub;
 
@@ -50,6 +58,8 @@ class DeviceController extends ChangeNotifier {
         // 默认 35s 用户等不起，企业惯例压到 8-15s
         timeout: const Duration(seconds: 10),
       );
+      // 企业 App 的标准流程：连上即发现服务，用户不该关心这一步
+      await discoverServices();
     } catch (e) {
       // 超时 / 外设不在了 / 安卓 133 都从这里出来，是业务分支不是兜底
       lastError = '$e';
@@ -70,6 +80,49 @@ class DeviceController extends ChangeNotifier {
       busy = false;
       linkRssi = null;
       notifyListeners();
+    }
+  }
+
+  /// 服务发现：把外设属性表拉回本地建立 UUID→句柄映射。
+  /// 每次连接后必做——句柄表随固件升级重排，不可跨连接复用（讲义第一节）。
+  Future<void> discoverServices() async {
+    if (!isConnected) return;
+    discovering = true;
+    notifyListeners();
+    try {
+      services = await device.discoverServices();
+    } catch (e) {
+      lastError = '$e';
+    } finally {
+      discovering = false;
+      notifyListeners();
+    }
+  }
+
+  /// 读特征值。结果同时进 characteristic.lastValue，UI 直接读它展示。
+  Future<void> readCharacteristic(BluetoothCharacteristic c) async {
+    try {
+      await c.read();
+    } catch (e) {
+      lastError = '$e';
+    }
+    notifyListeners();
+  }
+
+  /// 写特征值。写类型选错（特征不支持）会在这里抛出，交给 UI 展示。
+  Future<bool> writeCharacteristic(
+    BluetoothCharacteristic c,
+    List<int> data, {
+    required bool withResponse,
+  }) async {
+    try {
+      await c.write(data, withoutResponse: !withResponse);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      lastError = '$e';
+      notifyListeners();
+      return false;
     }
   }
 
