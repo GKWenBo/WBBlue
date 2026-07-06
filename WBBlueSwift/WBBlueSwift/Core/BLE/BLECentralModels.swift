@@ -32,7 +32,7 @@ enum CentralState: String {
 }
 
 /// 一次扫描发现(同一设备重复发现时以 id 去重、刷新 RSSI 与 lastSeen)。
-struct DiscoveredDevice: Identifiable, Equatable {
+struct DiscoveredDevice: Identifiable, Hashable {
     /// iOS 的设备标识:本机生成的会话级 UUID,不是 MAC 地址;
     /// 换手机、设备换随机地址(RPA)后都可能变化,企业侧持久绑定要靠厂商数据/序列号。
     let id: UUID
