@@ -26,8 +26,8 @@
 
 **Files:** Modify `WBBlueSwift.xcodeproj/project.pbxproj`(仅构建设置)
 
-- [ ] 两个 configuration 加 `INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App 使用蓝牙扫描并连接周边 BLE 设备(演示企业蓝牙开发全流程)。";`
-- [ ] 基线构建通过 → commit
+- [x] 两个 configuration 加 `INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App 使用蓝牙扫描并连接周边 BLE 设备(演示企业蓝牙开发全流程)。";`
+- [x] 基线构建通过 → commit
 
 ### Task 2: Hex 与 Backoff 纯函数(TDD)
 
@@ -35,7 +35,7 @@
 
 **Produces:** `Data.init?(hexString:)`, `Data.hexString(separator:)`; `Backoff.delay(attempt:base:cap:jitter:) -> TimeInterval`(attempt 从 1 起,指数 `base*2^(attempt-1)` 封顶 cap,jitter 为 0…ratio 的随机乘数,注入 RandomNumberGenerator 以便测试)。
 
-- [ ] 失败测试 → 实现 → 测试通过 → commit
+- [x] 失败测试 → 实现 → 测试通过 → commit
 
 ### Task 3: HeartRateParser(TDD)
 
@@ -43,7 +43,7 @@
 
 **Produces:** `struct HeartRateMeasurement { bpm: Int; sensorContact: SensorContact; energyExpended: Int?; rrIntervals: [Double] }`,`HeartRateParser.parse(_ data: Data) -> HeartRateMeasurement?`。用例:uint8/uint16、含能耗、含 RR(1/1024 秒换算)、空数据返回 nil。
 
-- [ ] 失败测试 → 实现 → 测试通过 → commit
+- [x] 失败测试 → 实现 → 测试通过 → commit
 
 ### Task 4: PacketCodec 私有协议(TDD,企业核心)
 
@@ -57,7 +57,7 @@
 - `struct PacketAssembler`(流式组包状态机):`mutating func feed(_ chunk: Data) -> [PacketAssembler.Event]`,Event = `.packet(Packet)` / `.error(PacketError)`;跨 chunk 半包、粘包、CRC 错帧丢弃复位、坏头逐字节重同步。
 - `PacketCodec.chunks(of data: Data, mtuPayload: Int) -> [Data]` 分包。
 
-- [ ] 失败测试(≥8 用例)→ 实现 → 测试通过 → commit
+- [x] 失败测试(≥8 用例)→ 实现 → 测试通过 → commit
 
 ### Task 5: BLE 基础类型 + 日志
 
@@ -65,7 +65,7 @@
 
 **Produces:** `enum BLEError: LocalizedError`(poweredOff/unauthorized/unsupported/timeout(operation)/disconnected/notConnected/characteristicNotFound/gatt(CBATTError.Code)/…含 recoverySuggestion);`BLEConstants.name(for: CBUUID) -> String?` 短名表;`BLELogger.shared`:`log(_ level:_ message:)` 写 os.Logger + @Observable 环形缓冲(500 条)供 UI。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 6: 抽象接口与模型(双实现契约)
 
@@ -78,7 +78,7 @@
 - `struct GATTCharacteristic`(uuid、properties、isNotifying、value)/`struct GATTService`(uuid、characteristics)
 - `protocol BLECentral: AnyObject`(@MainActor):`state`、`stateStream()`、`scan(services:) -> AsyncStream<DiscoveredDevice>`、`stopScan()`、`connect(id:timeout:) async throws`、`disconnect(id:)`、`connectionEvents(id:) -> AsyncStream<ConnectionEvent>`、`discoverServices(id:) async throws -> [GATTService]`、`readValue/writeValue(withResponse:)/setNotify -> AsyncThrowingStream<Data, Error>`、`readRSSI`。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 7: CentralManager + PeripheralSession(真实实现)
 
@@ -86,7 +86,7 @@
 
 **Consumes:** Task 6 协议。**Produces:** `final class CentralManager: NSObject, BLECentral`,委托回调主队列;connect 超时竞速(Task + Task.sleep,超时 cancelPeripheralConnection 并抛 `.timeout`);PeripheralSession 持有 CBPeripheral 并实现 CBPeripheralDelegate,读/写/发现用 continuation 表(按 CBUUID 键控),notify 用 AsyncThrowingStream,断连时 finish 所有挂起 continuation(防泄漏,关键异常点)。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 8: ReconnectOrchestrator(自动重连状态机)
 
@@ -94,7 +94,7 @@
 
 **Consumes:** BLECentral + Backoff。**Produces:** `@MainActor @Observable final class ReconnectOrchestrator`:`enum Phase { idle, connecting, connected, waitingRetry(attempt: Int, delay: TimeInterval), failed(Error) }`;`start(deviceID:)` 监听 connectionEvents,意外断连→按 Backoff 重试(默认 base 1s、cap 30s、最多 6 次),`stopAndDisconnect()` 用户主动断开置 idle 不重连。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 9: MockCentral(模拟器离线全流程)
 
@@ -102,7 +102,7 @@
 
 **Produces:** `final class MockCentral: BLECentral`:虚拟设备"WB 心率带 (Mock)"(0x180D/0x2A37 心率正弦波動通知、0x2A38 可读、自定义服务 FFF0/FFF1 写入回显私有协议帧)+"WB 温湿度计 (Mock)";可注入故障开关(连接超时、随机断连)演示重连。App 侧:模拟器编译默认用 Mock,真机默认用 CentralManager,可在设置切换。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 10: Feature — 扫描页 + 设备详情页
 
@@ -110,20 +110,20 @@
 
 蓝牙状态横幅(引导跳设置)、扫描开关/服务过滤/超时自停/幽灵设备清理;详情页:重连状态条(Orchestrator)、服务浏览器、属性徽标、hex 读写 sheet、订阅开关、RSSI。
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 11: Feature — 心率图表 + 私有协议控制台 + 外设模式 + 日志页
 
 **Files:** Create `Features/HeartRate/HeartRateView.swift`(+VM,Swift Charts 滑窗曲线)、`Features/Console/ProtocolConsoleView.swift`(+VM,FFF1 发私有帧收回显,分包演示)、`Features/Peripheral/PeripheralModeViewModel.swift`+`PeripheralModeView.swift`(CBPeripheralManager 广播 0x180D,双机互测)、`Features/Logs/LogsView.swift`
 
-- [ ] 构建通过 → commit
+- [x] 构建通过 → commit
 
 ### Task 12: 技术文档 8 篇
 
 **Files:** Create `WBBlueSwift/docs/README.md` 及 `01…07` 共 8 篇(见设计文档 §6,含异常处理手册逐条对应代码位置、真机手工验收清单)。
 
-- [ ] 文档完成、互链、无 TBD → commit
+- [x] 文档完成、互链、无 TBD → commit
 
 ### Task 13: 终验
 
-- [ ] `xcodebuild build` + `xcodebuild test` 全绿;更新根 README 指向双工程 → commit
+- [x] `xcodebuild build` + `xcodebuild test` 全绿;更新根 README 指向双工程 → commit
