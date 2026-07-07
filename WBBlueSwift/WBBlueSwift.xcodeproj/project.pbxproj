@@ -29,9 +29,22 @@
 		C2F730352FFAB6E7008F4748 /* WBBlueSwiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WBBlueSwiftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C2F730962FFB553E008F4748 /* Exceptions for "WBBlueSwift" folder in "WBBlueSwift" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C2F7301D2FFAB6E6008F4748 /* WBBlueSwift */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C2F730202FFAB6E6008F4748 /* WBBlueSwift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C2F730962FFB553E008F4748 /* Exceptions for "WBBlueSwift" folder in "WBBlueSwift" target */,
+			);
 			path = WBBlueSwift;
 			sourceTree = "<group>";
 		};
@@ -395,8 +408,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QQ3SYJEQ3V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WBBlueSwift/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App 使用蓝牙扫描并连接周边 BLE 设备(演示企业蓝牙开发全流程)。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -427,8 +442,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QQ3SYJEQ3V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WBBlueSwift/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App 使用蓝牙扫描并连接周边 BLE 设备(演示企业蓝牙开发全流程)。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

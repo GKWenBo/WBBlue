@@ -15,7 +15,7 @@
 //  全类型默认 MainActor 隔离,因此无需锁;高吞吐场景的专用队列改法见 docs/01。
 //
 
-import CoreBluetooth
+@preconcurrency import CoreBluetooth
 import Foundation
 
 final class PeripheralSession: NSObject {
@@ -188,7 +188,7 @@ final class PeripheralSession: NSObject {
 
 // MARK: - CBPeripheralDelegate(主队列回调,动态隔离与 MainActor 一致)
 
-extension PeripheralSession: @preconcurrency CBPeripheralDelegate {
+extension PeripheralSession: CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let error {

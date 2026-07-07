@@ -194,7 +194,7 @@ final class CentralManager: NSObject, BLECentral {
 
 // MARK: - CBCentralManagerDelegate(主队列回调)
 
-extension CentralManager: @preconcurrency CBCentralManagerDelegate {
+extension CentralManager: CBCentralManagerDelegate {
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         let state = CentralState(central.state)

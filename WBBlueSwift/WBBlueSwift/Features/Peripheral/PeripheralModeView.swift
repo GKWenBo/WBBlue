@@ -107,7 +107,7 @@ final class PeripheralModeViewModel: NSObject {
     }
 }
 
-extension PeripheralModeViewModel: @preconcurrency CBPeripheralManagerDelegate {
+extension PeripheralModeViewModel: CBPeripheralManagerDelegate {
 
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         state = CentralState(peripheral.state)
