@@ -104,11 +104,12 @@ class _StateCard extends StatelessWidget {
                   color: connected ? scheme.primary : scheme.outline,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  controller.busy ? '处理中…' : (connected ? '已连接' : '未连接'),
-                  style: Theme.of(context).textTheme.titleMedium,
+                Expanded(
+                  child: Text(
+                    controller.busy ? '处理中…' : controller.reconnectText,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-                const Spacer(),
                 if (controller.linkRssi != null)
                   Text('链路 RSSI: ${controller.linkRssi} dBm'),
               ],
@@ -116,6 +117,15 @@ class _StateCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(device.remoteId.str,
                 style: Theme.of(context).textTheme.bodySmall),
+            // 第 7 课：自动重连开关（意外掉线后指数退避重连）
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: const Text('意外掉线自动重连'),
+              subtitle: const Text('主动断开不会触发；重连成功后自动重建订阅'),
+              value: controller.autoReconnect,
+              onChanged: controller.setAutoReconnect,
+            ),
             if (reason.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(reason, style: TextStyle(color: scheme.error)),

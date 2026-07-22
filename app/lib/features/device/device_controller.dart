@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../../core/backoff.dart';
 import '../../core/gatt_names.dart';
 import '../../core/heart_rate.dart';
+
+/// 重连状态机的阶段（第 7 课）。
+enum ReconnectPhase { idle, connecting, connected, waitingRetry, failed }
 
 /// 设备详情页的连接状态机（第 3 课）。
 ///
@@ -23,11 +27,23 @@ class DeviceController extends ChangeNotifier {
         disconnectReason = device.disconnectReason;
         // 句柄表属于「这一次连接」：断线即作废，不缓存不落盘
         services = const [];
-        // 订阅同理（CCCD 随连接复位），流已由 cancelWhenDisconnected 取消
+        // 订阅同理（CCCD 随连接复位），流已由 cancelWhenDisconnected 取消。
+        // 注意：只清运行时订阅句柄，不清 _desiredNotify——重连后要照它重建。
         _valueSubs.clear();
         currentBpm = null;
+
+        if (_userInitiated || !autoReconnect) {
+          // 主动断开：收工，不重连（第 7 课核心分支）
+          reconnectPhase = ReconnectPhase.idle;
+        } else {
+          // 意外掉线：启动指数退避重连
+          _scheduleReconnect(reconnectAttempt + 1);
+        }
       } else {
         disconnectReason = null;
+        reconnectPhase = ReconnectPhase.connected;
+        reconnectAttempt = 0;
+        nextRetryIn = null;
       }
       notifyListeners();
     });
@@ -53,12 +69,35 @@ class DeviceController extends ChangeNotifier {
   final List<int> hrSamples = [];
   int? currentBpm;
 
+  // ── 第 7 课：自动重连状态机 ──
+  /// 开关：意外断线后是否自动重连
+  bool autoReconnect = true;
+  ReconnectPhase reconnectPhase = ReconnectPhase.idle;
+  int reconnectAttempt = 0;
+  Duration? nextRetryIn;
+
+  /// 单次连接超时与退避参数
+  static const int maxReconnectAttempts = 6;
+
+  /// 用户主动断开标志：置位时的断线不触发重连（区分「自己断的」与「掉线」）
+  bool _userInitiated = false;
+
+  /// 曾经订阅过的通知特征 UUID：重连后要按这份清单重建订阅
+  /// （CCCD 随连接复位，这是最常被漏掉的坑）
+  final Set<Guid> _desiredNotify = {};
+
+  Timer? _retryTimer;
+
   late final StreamSubscription<BluetoothConnectionState> _stateSub;
 
   bool get isConnected =>
       connectionState == BluetoothConnectionState.connected;
 
   Future<void> connect() async {
+    _userInitiated = false;
+    _retryTimer?.cancel();
+    reconnectAttempt = 0;
+    reconnectPhase = ReconnectPhase.connecting;
     busy = true;
     lastError = null;
     notifyListeners();
@@ -71,16 +110,37 @@ class DeviceController extends ChangeNotifier {
       );
       // 企业 App 的标准流程：连上即发现服务，用户不该关心这一步
       await discoverServices();
+      await _resubscribeDesired();
     } catch (e) {
       // 超时 / 外设不在了 / 安卓 133 都从这里出来，是业务分支不是兜底
       lastError = '$e';
+      // 首连失败也进重试（设备可能刚好不在广播窗口）
+      if (autoReconnect && !_userInitiated) {
+        _scheduleReconnect(reconnectAttempt + 1);
+      }
     } finally {
       busy = false;
       notifyListeners();
     }
   }
 
+  void setAutoReconnect(bool value) {
+    autoReconnect = value;
+    // 关闭时取消待重试；若已在 failed，允许下次手动连接重新计数
+    if (!value) {
+      _retryTimer?.cancel();
+      if (reconnectPhase == ReconnectPhase.waitingRetry) {
+        reconnectPhase = ReconnectPhase.idle;
+      }
+    }
+    notifyListeners();
+  }
+
+  /// 用户主动断开：置位标志，之后的断线事件不触发重连。
   Future<void> disconnect() async {
+    _userInitiated = true;
+    _retryTimer?.cancel();
+    reconnectPhase = ReconnectPhase.idle;
     busy = true;
     notifyListeners();
     try {
@@ -91,6 +151,60 @@ class DeviceController extends ChangeNotifier {
       busy = false;
       linkRssi = null;
       notifyListeners();
+    }
+  }
+
+  /// 调度第 [attempt] 次重连（指数退避）。超过上限进入 failed。
+  void _scheduleReconnect(int attempt) {
+    _retryTimer?.cancel();
+    if (attempt > maxReconnectAttempts) {
+      reconnectPhase = ReconnectPhase.failed;
+      reconnectAttempt = attempt - 1;
+      nextRetryIn = null;
+      notifyListeners();
+      return;
+    }
+    reconnectAttempt = attempt;
+    final delay = backoffDelay(attempt);
+    nextRetryIn = delay;
+    reconnectPhase = ReconnectPhase.waitingRetry;
+    notifyListeners();
+    _retryTimer = Timer(delay, () => _attemptReconnect(attempt));
+  }
+
+  Future<void> _attemptReconnect(int attempt) async {
+    if (_userInitiated || !autoReconnect) return;
+    reconnectPhase = ReconnectPhase.connecting;
+    notifyListeners();
+    try {
+      await device.connect(
+        license: License.nonprofit,
+        timeout: const Duration(seconds: 8),
+      );
+      // 重连成功：重建句柄表 + 重建订阅（关键，最常被漏）
+      await discoverServices();
+      await _resubscribeDesired();
+    } catch (e) {
+      lastError = '$e';
+      // connectionState 若已回 disconnected 会自行再调度；
+      // 这里兜住 connect 直接抛错、未产生断线事件的情形。
+      if (!isConnected && autoReconnect && !_userInitiated) {
+        _scheduleReconnect(attempt + 1);
+      }
+    }
+    notifyListeners();
+  }
+
+  /// 按 _desiredNotify 清单重新订阅（重连后 CCCD 已复位）。
+  Future<void> _resubscribeDesired() async {
+    if (_desiredNotify.isEmpty) return;
+    for (final service in services) {
+      for (final c in service.characteristics) {
+        if (_desiredNotify.contains(c.uuid) && !c.isNotifying) {
+          _bindNotify(c);
+          await c.setNotifyValue(true);
+        }
+      }
     }
   }
 
@@ -117,32 +231,40 @@ class DeviceController extends ChangeNotifier {
   Future<void> toggleNotify(BluetoothCharacteristic c) async {
     try {
       final enable = !c.isNotifying;
-      if (enable && !_valueSubs.containsKey(c.uuid)) {
-        // 先挂监听再开闸，避免开闸瞬间的首包漏掉。
-        // onValueReceived 只含读回与通知（不混写回显），上报处理统一接它。
-        final sub = c.onValueReceived.listen((value) {
-          if (shortUuid(c.uuid) == '2A37') {
-            final bpm = parseHeartRate(value);
-            if (bpm != null) {
-              currentBpm = bpm;
-              hrSamples.add(bpm);
-              if (hrSamples.length > maxHrSamples) hrSamples.removeAt(0);
-            }
-          }
-          notifyListeners();
-        });
-        // 断线自动取消订阅，防泄漏（订阅生命周期 ≤ 连接生命周期）
-        device.cancelWhenDisconnected(sub);
-        _valueSubs[c.uuid] = sub;
+      if (enable) {
+        _bindNotify(c);
+        _desiredNotify.add(c.uuid); // 记入清单，供重连后重建（第 7 课）
       }
       await c.setNotifyValue(enable);
       if (!enable) {
+        _desiredNotify.remove(c.uuid);
         await _valueSubs.remove(c.uuid)?.cancel();
       }
     } catch (e) {
       lastError = '$e';
     }
     notifyListeners();
+  }
+
+  /// 挂接一个通知特征的值监听（不写 CCCD，由调用方负责 setNotifyValue）。
+  /// 先挂监听再开闸，避免开闸瞬间的首包漏掉。
+  void _bindNotify(BluetoothCharacteristic c) {
+    if (_valueSubs.containsKey(c.uuid)) return;
+    // onValueReceived 只含读回与通知（不混写回显），上报处理统一接它。
+    final sub = c.onValueReceived.listen((value) {
+      if (shortUuid(c.uuid) == '2A37') {
+        final bpm = parseHeartRate(value);
+        if (bpm != null) {
+          currentBpm = bpm;
+          hrSamples.add(bpm);
+          if (hrSamples.length > maxHrSamples) hrSamples.removeAt(0);
+        }
+      }
+      notifyListeners();
+    });
+    // 断线自动取消订阅，防泄漏（订阅生命周期 ≤ 连接生命周期）
+    device.cancelWhenDisconnected(sub);
+    _valueSubs[c.uuid] = sub;
   }
 
   final Map<Guid, StreamSubscription<List<int>>> _valueSubs = {};
@@ -192,10 +314,31 @@ class DeviceController extends ChangeNotifier {
         '${reason.description == null ? '' : '（${reason.description}）'}';
   }
 
+  /// 重连阶段的人话（UI 状态卡片用）。
+  String get reconnectText {
+    switch (reconnectPhase) {
+      case ReconnectPhase.idle:
+        return isConnected ? '已连接' : '未连接';
+      case ReconnectPhase.connecting:
+        return reconnectAttempt <= 1
+            ? '连接中…'
+            : '重连中（第 $reconnectAttempt 次）…';
+      case ReconnectPhase.connected:
+        return '已连接';
+      case ReconnectPhase.waitingRetry:
+        final s = ((nextRetryIn?.inMilliseconds ?? 0) / 1000).toStringAsFixed(1);
+        return '断线，${s}s 后第 $reconnectAttempt 次重连';
+      case ReconnectPhase.failed:
+        return '已放弃：重试 $maxReconnectAttempts 次未恢复';
+    }
+  }
+
   @override
   void dispose() {
+    // 离开页面视为主动断开：停掉重连、清订阅意图，避免后台残留重连
+    _userInitiated = true;
+    _retryTimer?.cancel();
     _stateSub.cancel();
-    // 本课策略「离开页面即断开」；第 7 课引入后台保活后会调整
     device.disconnect();
     super.dispose();
   }
