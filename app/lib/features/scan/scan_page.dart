@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import '../../core/gatt_names.dart';
+import '../demo/mock_demo_page.dart';
 import '../device/device_page.dart';
 import 'scan_controller.dart';
 
@@ -44,7 +45,18 @@ class _ScanPageState extends State<ScanPage> {
         final bluetoothOff =
             _controller.adapterState != BluetoothAdapterState.on;
         return Scaffold(
-          appBar: AppBar(title: const Text('扫描附近的 BLE 设备')),
+          appBar: AppBar(
+            title: const Text('扫描附近的 BLE 设备'),
+            actions: [
+              IconButton(
+                tooltip: '离线演示（Mock，无需真机）',
+                icon: const Icon(Icons.science_outlined),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MockDemoPage()),
+                ),
+              ),
+            ],
+          ),
           body: Column(
             children: [
               if (_controller.lastError != null)
