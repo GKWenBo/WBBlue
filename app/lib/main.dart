@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'features/scan/scan_page.dart';
+import 'features/home/home_page.dart';
 
 void main() {
   runApp(const WbBleApp());
@@ -16,7 +16,7 @@ class WbBleApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const ScanPage(),
+      home: const HomePage(),
     );
   }
 }
