@@ -15,14 +15,16 @@
 | ✅ | 第 3 课 | 连接管理（connect / 状态流 / 超时） | 与模拟外设建连断连，UI 状态实时正确 |
 | ✅ | 第 4 课 | GATT 读写（discoverServices / read / write） | 读写模拟外设上的自建 Characteristic 成功 |
 | ✅ | 第 5 课 | 订阅通知（Notify/Indicate / CCCD / 心率服务实战） | 实时心率数据流稳定刷新 |
-| 🔄 | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
-| ⬜ | 第 7 课 | 稳定性工程（自动重连状态机 / 异常场景） | 外设消失再出现，App 自动恢复连接 |
-| ⬜ | 第 8 课 | 架构分层与可测试性（接口抽象 + Mock 双实现） | Mock 下全流程可离线演示 |
-| ⬜ | 第 9 课 | 双端平台差异与后台（iOS 状态恢复 / Android 前台服务） | 双端后台配置完成，能讲清差异 |
-| ⬜ | 第 10 课 | 综合项目验收：「设备管家」全流程 | 双端真机演示全流程通过 |
-| ⬜ | 第 11 课（可选） | 面试冲刺（高频题 / OTA / iBeacon / 配对绑定 / Mesh） | 模拟问答一轮 |
+| 📝 | 第 6 课 | 私有二进制协议（帧结构 / CRC / 分包组包）★企业核心 | 协议编解码层完成 + 单元测试通过 |
+| 📝 | 第 7 课 | 稳定性工程（自动重连状态机 / 异常场景） | 外设消失再出现，App 自动恢复连接 |
+| 📝 | 第 8 课 | 架构分层与可测试性（接口抽象 + Mock 双实现） | Mock 下全流程可离线演示 |
+| 📝 | 第 9 课 | 双端平台差异与后台（iOS 状态恢复 / Android 前台服务） | 双端后台配置完成，能讲清差异 |
+| 📝 | 第 10 课 | 综合项目验收：「设备管家」全流程 | 双端真机演示全流程通过 |
+| 📝 | 第 11 课（可选） | 面试冲刺（高频题 / OTA / iBeacon / 配对绑定 / Mesh） | 模拟问答一轮 |
 
-图例：⬜ 未开始 · 🔄 进行中 · ✅ 已验收
+图例：⬜ 未开始 · 🔄 进行中 · 📝 代码与讲义已就绪、待用户验收 · ✅ 已验收
+
+> 第 6–11 课（2026-07-22 由 Claude 一次性编写）：代码 + 讲义已完成、`flutter analyze` 无告警、`flutter test` 40 条全绿、APK 构建通过，**但尚未经用户真机验收**。用户逐课看讲义 + 真机验证通过后，再把对应行改为 ✅。
 
 ## 验收记录
 
@@ -72,3 +74,34 @@
 - [x] 验收题：setNotifyValue 两步（本地注册+写 CCCD 01 00）与安卓忘写 CCCD 经典 bug、Notify/Indicate 与两种写的四象限对称、0x2A37 帧逐字节解析（flags/BPM/RR 小端）
 
 四象限选型表成型：Write Request（可靠指令）/ Write Command（高速下发）/ Indicate（可靠上报）/ Notify（高速上报）。重连必须重订阅——第 7 课状态机的必做项。
+
+### 第 6 课 —— 📝 待验收（2026-07-22 编写）
+- 代码：core/protocol/packet.dart（Packet / PacketCodec: crc16/encode/chunks / PacketAssembler 组包状态机）、features/protocol/（ProtocolSession + 控制台页），13 条 TDD 单测
+- 讲义：lessons/lesson-06.md
+- 待用户验收：真机用 nRF Connect GATT server 一写一通知，控制台发帧看对端字节、收回帧看解析/坏帧重同步 + 三道验收题
+
+### 第 7 课 —— 📝 待验收（2026-07-22 编写）
+- 代码：DeviceController 内嵌重连状态机（ReconnectPhase、区分主动/意外断开、指数退避、重连后 _resubscribeDesired 重建订阅）、core/backoff.dart（4 条单测）、DevicePage 自动重连开关与实时文案
+- 讲义：lessons/lesson-07.md
+- 待用户验收：意外掉线→退避重连→订阅自动恢复；主动断开不重连；放弃后手动重连 + 三道验收题
+
+### 第 8 课 —— 📝 待验收（2026-07-22 编写）
+- 代码：core/ble/ble_central.dart（抽象接口 + 中立模型）、real_ble_central.dart（FBP 防腐层）、mock_ble_central.dart（虚拟心率带/固件设备/故障注入）、features/demo/mock_demo_page.dart 离线演示页，mock_central 4 条全流程单测
+- 讲义：lessons/lesson-08.md
+- 待用户验收：模拟器零外设跑通离线演示（心率曲线 + 协议回帧 + 故障注入）+ 三道验收题
+
+### 第 9 课 —— 📝 待验收（2026-07-22 编写）
+- 代码：iOS Info.plist 加 UIBackgroundModes(bluetooth-central)、Android Manifest 加前台服务三权限、features/platform/platform_info_page.dart 双端差异信息页
+- 讲义：lessons/lesson-09.md
+- 待用户验收：平台信息页正确识别平台、iOS 后台连接实验（真机）+ 三道验收题
+
+### 第 10 课 —— 📝 待验收（2026-07-22 编写）
+- 代码：features/home/home_page.dart「设备管家」首页整合三入口，main.dart 首页切换
+- 讲义：lessons/lesson-10.md（架构总览图 + A-E 五组全流程验收脚本）
+- 待用户验收：A-E 清单双端真机（或离线兜底）全过 + 三道验收题
+
+### 第 11 课（可选）—— 📝 待验收（2026-07-22 编写）
+- 讲义：lessons/lesson-11.md（面试问答：生命周期/四象限/私有协议/稳定性/双端/进阶专题 + 30 秒电梯陈述），纯文档无代码
+- 待用户验收：自测能脱稿讲一遍
+
+—— 全部 6 课的代码质量门槛已过：flutter analyze 无告警、flutter test 40 条全绿、APK 构建通过。等用户逐课真机验收后改 ✅。
