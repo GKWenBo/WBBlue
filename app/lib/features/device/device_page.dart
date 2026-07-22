@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../protocol/protocol_console_page.dart';
 import 'device_controller.dart';
 import 'gatt_browser.dart';
 import 'heart_rate_chart.dart';
@@ -47,6 +48,22 @@ class _DevicePageState extends State<DevicePage> {
                   samples: _controller.hrSamples,
                   currentBpm: _controller.currentBpm,
                   capacity: DeviceController.maxHrSamples,
+                ),
+              ],
+              if (_controller.isConnected &&
+                  _controller.services.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProtocolConsolePage(
+                        device: widget.device,
+                        services: _controller.services,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.terminal),
+                  label: const Text('私有协议控制台（第 6 课）'),
                 ),
               ],
               const SizedBox(height: 24),
