@@ -4,6 +4,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/gatt_names.dart';
 import '../demo/mock_demo_page.dart';
 import '../device/device_page.dart';
+import '../platform/platform_info_page.dart';
 import 'scan_controller.dart';
 
 /// 扫描页（第 2 课）：空态 / 错误态 / 过滤开关 / 结果列表。
@@ -48,6 +49,13 @@ class _ScanPageState extends State<ScanPage> {
           appBar: AppBar(
             title: const Text('扫描附近的 BLE 设备'),
             actions: [
+              IconButton(
+                tooltip: '双端差异与后台（第 9 课）',
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PlatformInfoPage()),
+                ),
+              ),
               IconButton(
                 tooltip: '离线演示（Mock，无需真机）',
                 icon: const Icon(Icons.science_outlined),

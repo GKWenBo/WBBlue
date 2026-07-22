@@ -15,6 +15,18 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
         android:maxSdkVersion="30" />
 
+    <!-- 第 9 课：后台保活。Android 没有 iOS 那种系统代管的后台蓝牙，
+         息屏/切后台后系统会限制甚至挂起 App 的蓝牙活动。要长时间保持连接
+         必须起「前台服务」（带常驻通知）。以下是接入所需权限：
+         - FOREGROUND_SERVICE：Android 9+ 起前台服务必备；
+         - FOREGROUND_SERVICE_CONNECTED_DEVICE：Android 14+ 要求声明前台服务类型。
+         真正的 Service 类需通过平台通道或插件（如 flutter_foreground_task）实现，
+         本教学工程只声明配置、在讲义讲清原理，不落地 Service 代码。 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- Android 13+ 通知运行时权限：前台服务的常驻通知需要它 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:label="wb_ble_app"
         android:name="${applicationName}"

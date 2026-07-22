@@ -28,6 +28,13 @@
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>App 需要使用蓝牙来扫描并连接附近的 BLE 设备，读取设备数据。</string>
+	<!-- 第 9 课：后台蓝牙能力。bluetooth-central = App 退后台后仍保持连接、
+	     可被设备通知唤醒（约 10 秒处理窗口）。开启后后台扫描必须带服务 UUID 过滤。
+	     等价于 Xcode 的 Signing & Capabilities → Background Modes → Uses Bluetooth LE accessories。 -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
